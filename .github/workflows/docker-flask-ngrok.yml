@@ -1,0 +1,41 @@
+name: Build and Preview Flask with Docker + Ngrok
+
+on:
+  workflow_dispatch:   # déclenchement manuel
+  push:                # ou au push sur la branche principale
+    branches: [ "main" ]
+
+jobs:
+  build-and-preview:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Récupération du code du repo
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # Build de l’image Docker
+      - name: Build Docker image
+        run: docker build -t flask-hello .
+
+      # Run du conteneur Flask en arrière-plan
+      - name: Run Flask container
+        run: docker run -d -p 5000:5000 --name flask_app flask-hello
+
+      # Installer Ngrok
+      - name: Install ngrok
+        run: |
+          curl -s https://ngrok-agent.s3.amazonaws.com/ngrok.asc | sudo tee /etc/apt/trusted.gpg.d/ngrok.asc >/dev/null
+          echo "deb https://ngrok-agent.s3.amazonaws.com buster main" | sudo tee /etc/apt/sources.list.d/ngrok.list
+          sudo apt update && sudo apt install -y ngrok
+
+      # Lancer ngrok pour exposer le port 5000
+      - name: Start ngrok tunnel
+        run: |
+          nohup ngrok http 5000 > ngrok.log &
+          sleep 5
+          cat ngrok.log | grep "url=" | sed -n 's/.*url=\([^ ]*\).*/Public URL: \1/p'
+
+      # Garder le serveur dispo 120s
+      - name: Keep alive for 120s
+        run: sleep 120
