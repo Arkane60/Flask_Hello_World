@@ -1,16 +1,12 @@
-FROM python:3.10-slim
+FROM python:3.9-slim
 
-# Définir le dossier de travail
-WORKDIR /app
+WORKDIR /Flask_Hello_World
 
-# Copier le code du repo
-COPY . /app
+COPY requirements.txt .
+RUN pip install -r requirements.txt
 
-# Installer Flask et dépendances
-RUN pip install --no-cache-dir -r requirements.txt
+COPY . .
 
-# Exposer le port 5000 (Flask par défaut)
 EXPOSE 5000
 
-# Lancer l’application Flask
-CMD ["python", "hello.py"]
+CMD ["python", "__init__.py"]
